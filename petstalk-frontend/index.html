@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pet's Talk — Tu mascota te habla</title>
+<style>
+  :root {
+    --green: #2d7a2d;
+    --green-light: #e8f5e9;
+    --green-mid: #4caf50;
+    --orange: #e07b20;
+    --orange-light: #fff3e0;
+    --white: #ffffff;
+    --gray-bg: #f5f7f5;
+    --gray-border: #e0e8e0;
+    --gray-text: #666;
+    --dark: #1a2e1a;
+    --red: #d32f2f;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--gray-bg);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* ─── PANTALLAS ─── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ─── ONBOARDING ─── */
+  #screen-onboarding {
+    background: linear-gradient(160deg, #2d7a2d 0%, #1a4a1a 100%);
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .onboarding-logo { font-size: 64px; margin-bottom: 16px; }
+  .onboarding-title { font-size: 36px; font-weight: 800; color: white; letter-spacing: -1px; }
+  .onboarding-sub { font-size: 16px; color: rgba(255,255,255,0.75); margin-top: 8px; margin-bottom: 48px; }
+  .onboarding-animals { display: flex; gap: 16px; justify-content: center; margin-bottom: 48px; }
+  .animal-card {
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--radius);
+    padding: 20px;
+    font-size: 40px;
+    backdrop-filter: blur(8px);
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 40px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    max-width: 320px;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-link { background: none; border: none; color: rgba(255,255,255,0.75); font-size: 14px; cursor: pointer; margin-top: 16px; text-decoration: underline; }
+
+  /* ─── AUTH ─── */
+  #screen-register, #screen-login {
+    background: white;
+    padding: 0;
+  }
+  .auth-header {
+    background: linear-gradient(160deg, #2d7a2d 0%, #1a4a1a 100%);
+    padding: 40px 24px 32px;
+    text-align: center;
+    color: white;
+  }
+  .auth-header .logo { font-size: 32px; margin-bottom: 4px; }
+  .auth-header h2 { font-size: 22px; font-weight: 700; }
+  .auth-header p { font-size: 14px; opacity: 0.75; margin-top: 4px; }
+  .auth-body { padding: 32px 24px; max-width: 400px; margin: 0 auto; width: 100%; }
+  .role-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .role-tab {
+    flex: 1; padding: 10px; border: 2px solid var(--gray-border);
+    border-radius: var(--radius); background: white; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--gray-text);
+    transition: all 0.15s; text-align: center;
+  }
+  .role-tab.active { border-color: var(--green); color: var(--green); background: var(--green-light); }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--green); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 12px 16px;
+    border: 2px solid var(--gray-border);
+    border-radius: var(--radius); font-size: 15px;
+    transition: border-color 0.15s; outline: none; background: white;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--green); }
+  .auth-footer { text-align: center; margin-top: 20px; font-size: 14px; color: var(--gray-text); }
+  .auth-footer span { color: var(--green); cursor: pointer; font-weight: 600; }
+
+  /* ─── MAIN LAYOUT ─── */
+  .main-layout { display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    background: var(--green);
+    color: white;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .topbar-user { font-size: 13px; opacity: 0.85; cursor: pointer; }
+  .content { flex: 1; padding: 20px; max-width: 600px; margin: 0 auto; width: 100%; }
+  .bottom-nav {
+    background: white;
+    border-top: 1px solid var(--gray-border);
+    display: flex;
+    position: sticky; bottom: 0;
+  }
+  .nav-item {
+    flex: 1; padding: 12px 8px; text-align: center;
+    cursor: pointer; font-size: 10px; color: var(--gray-text);
+    transition: color 0.15s; border: none; background: none;
+  }
+  .nav-item .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+  .nav-item.active { color: var(--green); font-weight: 700; }
+
+  /* ─── DASHBOARD ─── */
+  .greeting { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .greeting-sub { font-size: 14px; color: var(--gray-text); margin-bottom: 20px; }
+
+  .pet-status-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    border-left: 4px solid var(--green);
+  }
+  .pet-status-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .pet-avatar { width: 56px; height: 56px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .pet-name { font-size: 18px; font-weight: 800; }
+  .pet-breed { font-size: 13px; color: var(--gray-text); }
+  .status-badge { margin-left: auto; background: var(--green-light); color: var(--green); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+  .stat-item { text-align: center; padding: 12px 8px; background: var(--gray-bg); border-radius: 8px; }
+  .stat-icon { font-size: 20px; }
+  .stat-value { font-size: 14px; font-weight: 800; color: var(--dark); }
+  .stat-label { font-size: 10px; color: var(--gray-text); }
+
+  .section-title { font-size: 15px; font-weight: 800; color: var(--dark); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .alert-item {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .alert-red { background: #fdecea; color: var(--red); }
+  .alert-orange { background: var(--orange-light); color: var(--orange); }
+  .alert-blue { background: #e3f2fd; color: #1565c0; }
+
+  .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+  .quick-btn {
+    background: white;
+    border: none;
+    border-radius: var(--radius);
+    padding: 12px 8px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: var(--shadow);
+    font-size: 11px;
+    color: var(--dark);
+    font-weight: 600;
+  }
+  .quick-btn .qb-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+
+  /* ─── MASCOTA ─── */
+  .pet-form-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .pet-form-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; color: var(--green); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ─── AGENDA ─── */
+  .agenda-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .agenda-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .agenda-icon.vaccine { background: #fdecea; }
+  .agenda-icon.pipette { background: var(--orange-light); }
+  .agenda-icon.birthday { background: #e8f5e9; }
+  .agenda-icon.antiparasitic { background: #e3f2fd; }
+  .agenda-icon.vet { background: #f3e5f5; }
+  .agenda-info { flex: 1; }
+  .agenda-title { font-size: 14px; font-weight: 700; }
+  .agenda-sub { font-size: 12px; color: var(--gray-text); }
+  .agenda-date { font-size: 12px; font-weight: 700; color: var(--orange); text-align: right; flex-shrink: 0; }
+
+  .fab {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(45,122,45,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    transition: transform 0.15s;
+  }
+  .fab:hover { transform: scale(1.05); }
+
+  /* ─── VETERINARIA ─── */
+  .vet-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .vet-stat { background: white; border-radius: var(--radius); padding: 16px; text-align: center; box-shadow: var(--shadow); }
+  .vet-stat-num { font-size: 28px; font-weight: 900; color: var(--green); }
+  .vet-stat-label { font-size: 11px; color: var(--gray-text); font-weight: 600; }
+
+  .patient-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    margin-bottom: 10px;
+  }
+  .patient-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .patient-avatar { width: 40px; height: 40px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .patient-name { font-size: 15px; font-weight: 700; }
+  .patient-breed { font-size: 12px; color: var(--gray-text); }
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-left: auto; }
+  .badge-warn { background: #fdecea; color: var(--red); }
+  .badge-ok { background: var(--green-light); color: var(--green); }
+  .patient-details { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; }
+  .detail-item { display: flex; justify-content: space-between; }
+  .detail-key { color: var(--gray-text); }
+  .detail-val { font-weight: 600; }
+
+  .offer-banner {
+    background: linear-gradient(135deg, var(--orange), #f09a3e);
+    border-radius: var(--radius);
+    padding: 20px;
+    color: white;
+    margin-bottom: 16px;
+  }
+  .offer-banner h3 { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .offer-banner p { font-size: 13px; opacity: 0.9; margin-bottom: 12px; }
+  .btn-white { background: white; color: var(--orange); border: none; border-radius: 8px; padding: 10px 20px; font-weight: 700; font-size: 13px; cursor: pointer; }
+
+  .turno-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-border); }
+  .turno-time { font-size: 15px; font-weight: 800; color: var(--green); min-width: 50px; }
+  .turno-pet { font-size: 14px; font-weight: 600; }
+  .turno-type { font-size: 12px; color: var(--gray-text); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal h3 { font-size: 18px; font-weight: 800; margin-bottom: 20px; color: var(--green); }
+  .modal-close { float: right; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gray-text); }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--dark); color: white;
+    padding: 12px 24px; border-radius: 50px;
+    font-size: 14px; font-weight: 600;
+    z-index: 300; opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ─── TRIGGER DEMO ─── */
+  .trigger-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .trigger-btn {
+    background: var(--gray-bg);
+    border: 2px solid var(--gray-border);
+    border-radius: var(--radius);
+    padding: 14px 10px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dark);
+    transition: all 0.15s;
+  }
+  .trigger-btn:hover { border-color: var(--green); background: var(--green-light); color: var(--green); }
+  .trigger-btn .tb-icon { font-size: 26px; display: block; margin-bottom: 6px; }
+
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--gray-text); }
+  .empty-state .es-icon { font-size: 56px; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- ONBOARDING -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-onboarding" class="screen active">
+  <div class="onboarding-logo">🐾</div>
+  <h1 class="onboarding-title">Pet's Talk</h1>
+  <p class="onboarding-sub">Tu mascota te habla por WhatsApp</p>
+  <div class="onboarding-animals">
+    <div class="animal-card">🐕</div>
+    <div class="animal-card">🐈</div>
+    <div class="animal-card">🐇</div>
+  </div>
+  <button class="btn-primary" onclick="showScreen('register')">Comenzar →</button>
+  <button class="btn-link" onclick="showScreen('login')">Ya tengo cuenta · Iniciar sesión</button>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- REGISTRO -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-register" class="screen">
+  <div class="auth-header">
+    <div class="logo">🐾</div>
+    <h2>Crear cuenta</h2>
+    <p>Registrate para empezar</p>
+  </div>
+  <div class="auth-body">
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="selectRole(this,'owner')" data-role="owner">🏠 Dueño</button>
+      <button class="role-tab" onclick="selectRole(this,'vet')" data-role="vet">🩺 Veterinaria</button>
+      <button class="role-tab" onclick="selectRole(this,'shop')" data-role="shop">🛒 Comercio</button>
+    </div>
+    <div class="form-group">
+      <label>Nombre completo</label>
+      <input type="text" id="reg-name" placeholder="Ariel García">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="ariel@email.com">
+    </div>
+    <div class="form-group">
+      <label>Teléfono WhatsApp</label>
+      <input type="tel" id="reg-phone" placeholder="+54 9 11 1234-5678">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="reg-password" placeholder="••••••••">
+    </div>
+    <input type="hidden" id="reg-role" value="owner">
+    <button class="btn-primary" style="max-width:100%;margin-top:8px" onclick="doRegister()">Registrarse</button>
+    <div class="auth-footer">¿Ya tenés cuenta? <span onclick="showScreen('login')">Iniciá sesión</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LOGIN -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-login" class="screen">
+  <div class="auth-header">
+    <div class="logo">🐾</div>
+    <h2>Iniciar sesión</h2>
+    <p>Bienvenido de vuelta</p>
+  </div>
+  <div class="auth-body">
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="ariel@email.com">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="login-password" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" style="max-width:100%;margin-top:8px" onclick="doLogin()">Iniciar sesión</button>
+    <div class="auth-footer">¿No tenés cuenta? <span onclick="showScreen('register')">Registrate</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- APP PRINCIPAL - DUEÑO -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+  <div class="main-layout">
+    <div class="topbar">
+      <div class="topbar-title">🐾 Pet's Talk</div>
+      <div class="topbar-user" onclick="doLogout()">Salir →</div>
+    </div>
+
+    <div class="content" id="tab-content">
+      <!-- Tabs se renderizan acá -->
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('dashboard',this)">
+        <span class="nav-icon">🏠</span>Inicio
+      </button>
+      <button class="nav-item" onclick="switchTab('agenda',this)">
+        <span class="nav-icon">📅</span>Agenda
+      </button>
+      <button class="nav-item" onclick="switchTab('mascota',this)">
+        <span class="nav-icon">🐕</span>Mascota
+      </button>
+      <button class="nav-item" onclick="switchTab('mensajes',this)">
+        <span class="nav-icon">💬</span>Mensajes
+      </button>
+    </nav>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- APP PRINCIPAL - VETERINARIA -->
+<!-- ═══════════════════════════════════════ -->
+<div id="screen-vet" class="screen">
+  <div class="main-layout">
+    <div class="topbar">
+      <div class="topbar-title">🩺 Portal Veterinaria</div>
+      <div class="topbar-user" onclick="doLogout()">Salir →</div>
+    </div>
+    <div class="content" id="vet-content"></div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchVetTab('resumen',this)">
+        <span class="nav-icon">📊</span>Resumen
+      </button>
+      <button class="nav-item" onclick="switchVetTab('pacientes',this)">
+        <span class="nav-icon">🐾</span>Pacientes
+      </button>
+      <button class="nav-item" onclick="switchVetTab('turnos',this)">
+        <span class="nav-icon">📅</span>Turnos
+      </button>
+      <button class="nav-item" onclick="switchVetTab('ofertas',this)">
+        <span class="nav-icon">🏷️</span>Ofertas
+      </button>
+    </nav>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MODAL AGENDA -->
+<!-- ═══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-agenda">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-agenda')">×</button>
+    <h3>➕ Agregar evento</h3>
+    <div class="form-group">
+      <label>Tipo de evento</label>
+      <select id="event-type">
+        <option value="vaccine">💉 Vacuna</option>
+        <option value="antiparasitic">🐛 Antiparasitario</option>
+        <option value="pipette">🧴 Pipeta antipulgas</option>
+        <option value="vet_visit">🩺 Consulta veterinaria</option>
+        <option value="birthday">🎂 Cumpleaños</option>
+        <option value="heat_cycle">❤️ Ciclo de celo</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <input type="text" id="event-title" placeholder="Ej: Antirrábica anual">
+    </div>
+    <div class="form-group">
+      <label>Fecha</label>
+      <input type="date" id="event-date">
+    </div>
+    <button class="btn-primary" style="max-width:100%" onclick="saveAgendaEvent()">Guardar evento</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MODAL OFERTA VET -->
+<!-- ═══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-oferta">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-oferta')">×</button>
+    <h3>📢 Publicar oferta</h3>
+    <div class="form-group">
+      <label>Producto o servicio</label>
+      <input type="text" id="oferta-titulo" placeholder="Ej: VitalCan Adult x 15kg">
+    </div>
+    <div class="form-group">
+      <label>Descuento %</label>
+      <input type="number" id="oferta-descuento" placeholder="20">
+    </div>
+    <div class="form-group">
+      <label>Descripción</label>
+      <input type="text" id="oferta-desc" placeholder="Envío gratis a domicilio">
+    </div>
+    <button class="btn-primary" style="max-width:100%" onclick="publishOffer()">Publicar oferta</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════
+const API = 'https://pets-api.sessian.tech';
+let token = localStorage.getItem('pt_token') || '';
+let userRole = localStorage.getItem('pt_role') || '';
+let userName = localStorage.getItem('pt_name') || '';
+let currentPet = JSON.parse(localStorage.getItem('pt_pet') || 'null');
+
+// ════════════════════════════════════════
+// NAVEGACIÓN
+// ════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function showApp() {
+  if (userRole === 'vet' || userRole === 'shop') {
+    showScreen('vet');
+    renderVetTab('resumen');
+  } else {
+    showScreen('app');
+    renderTab('dashboard');
+  }
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('#screen-app .nav-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderTab(tab);
+}
+
+function switchVetTab(tab, el) {
+  document.querySelectorAll('#screen-vet .nav-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderVetTab(tab);
+}
+
+// ════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════
+function selectRole(el, role) {
+  document.querySelectorAll('.role-tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('reg-role').value = role;
+}
+
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim().replace(/\D/g,'');
+  const password = document.getElementById('reg-password').value;
+  const role = document.getElementById('reg-role').value;
+
+  if (!name || !email || !phone || !password) { showToast('Completá todos los campos'); return; }
+
+  try {
+    const r = await fetch(`${API}/api/auth/register`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name, email, phone, password, role})
+    });
+    const data = await r.json();
+    if (!r.ok) { showToast(data.error || 'Error al registrar'); return; }
+    saveSession(data);
+    showToast('¡Bienvenido/a ' + name.split(' ')[0] + '!');
+    showApp();
+  } catch(e) { showToast('Error de conexión'); }
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { showToast('Completá los campos'); return; }
+
+  try {
+    const r = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await r.json();
+    if (!r.ok) { showToast(data.error || 'Credenciales incorrectas'); return; }
+    saveSession(data);
+    showApp();
+  } catch(e) { showToast('Error de conexión'); }
+}
+
+function saveSession(data) {
+  token = data.token;
+  userRole = data.user.role;
+  userName = data.user.name;
+  localStorage.setItem('pt_token', token);
+  localStorage.setItem('pt_role', userRole);
+  localStorage.setItem('pt_name', userName);
+}
+
+function doLogout() {
+  localStorage.clear();
+  token = ''; userRole = ''; userName = ''; currentPet = null;
+  showScreen('onboarding');
+}
+
+// ════════════════════════════════════════
+// TABS - DUEÑO
+// ════════════════════════════════════════
+async function renderTab(tab) {
+  const c = document.getElementById('tab-content');
+  if (tab === 'dashboard') await renderDashboard(c);
+  else if (tab === 'mascota') await renderMascota(c);
+  else if (tab === 'agenda') await renderAgenda(c);
+  else if (tab === 'mensajes') renderMensajes(c);
+}
+
+async function renderDashboard(c) {
+  const firstName = userName.split(' ')[0];
+  let petHtml = '';
+  let alertsHtml = '';
+
+  if (!currentPet) {
+    petHtml = `
+      <div class="empty-state">
+        <div class="es-icon">🐾</div>
+        <h3>Registrá tu mascota</h3>
+        <p>Todavía no registraste ninguna mascota. ¡Empezá ahora!</p>
+        <button class="btn-primary" style="max-width:200px;margin-top:16px" onclick="switchTab('mascota', document.querySelectorAll('.nav-item')[2])">Agregar mascota</button>
+      </div>`;
+  } else {
+    const petIcon = currentPet.species === 'gato' ? '🐈' : '🐕';
+    petHtml = `
+      <div class="pet-status-card">
+        <div class="pet-status-header">
+          <div class="pet-avatar">${petIcon}</div>
+          <div>
+            <div class="pet-name">${currentPet.name}</div>
+            <div class="pet-breed">${currentPet.breed || currentPet.species}</div>
+          </div>
+          <div class="status-badge">● Activa</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item"><div class="stat-icon">😴</div><div class="stat-value">6.2h</div><div class="stat-label">Descanso</div></div>
+          <div class="stat-item"><div class="stat-icon">🏃</div><div class="stat-value">2.1h</div><div class="stat-label">Actividad</div></div>
+          <div class="stat-item"><div class="stat-icon">🍖</div><div class="stat-value">2x</div><div class="stat-label">Comida</div></div>
+          <div class="stat-item"><div class="stat-icon">💧</div><div class="stat-value">4x</div><div class="stat-label">Agua</div></div>
+        </div>
+      </div>`;
+    alertsHtml = `
+      <div class="section-title">⚡ Alertas del día</div>
+      <div class="alert-item alert-red">💉 Antirrábica vence en 5 días</div>
+      <div class="alert-item alert-orange">🧴 Renovar pipeta mañana</div>
+      <div class="alert-item alert-blue">🦮 Sin paseo hoy todavía</div>`;
+  }
+
+  c.innerHTML = `
+    <div class="greeting">Hola ${firstName} 🐾</div>
+    <div class="greeting-sub">Así está ${currentPet ? currentPet.name : 'tu mascota'} hoy</div>
+    ${petHtml}
+    ${alertsHtml}
+    ${currentPet ? `
+    <div class="section-title" style="margin-top:16px">⚡ Acciones rápidas</div>
+    <div class="quick-actions">
+      <button class="quick-btn" onclick="switchTab('agenda',document.querySelectorAll('.nav-item')[1])"><span class="qb-icon">📅</span>Agenda</button>
+      <button class="quick-btn" onclick="switchTab('mensajes',document.querySelectorAll('.nav-item')[3])"><span class="qb-icon">💬</span>Mensajes</button>
+      <button class="quick-btn" onclick="switchTab('mascota',document.querySelectorAll('.nav-item')[2])"><span class="qb-icon">🐕</span>Mi mascota</button>
+      <button class="quick-btn"><span class="qb-icon">🛒</span>Ofertas</button>
+    </div>` : ''}
+  `;
+}
+
+async function renderMascota(c) {
+  let petData = currentPet || {};
+  c.innerHTML = `
+    <div style="font-size:20px;font-weight:800;margin-bottom:16px">🐾 Mi Mascota</div>
+    <div class="pet-form-card">
+      <h3>Datos de la mascota</h3>
+      <div class="form-group"><label>Nombre</label><input type="text" id="pet-name" value="${petData.name||''}" placeholder="Lila"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Especie</label>
+          <select id="pet-species">
+            <option value="perro" ${petData.species==='perro'?'selected':''}>🐕 Perro</option>
+            <option value="gato" ${petData.species==='gato'?'selected':''}>🐈 Gato</option>
+            <option value="conejo" ${petData.species==='conejo'?'selected':''}>🐇 Conejo</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Sexo</label>
+          <select id="pet-sex">
+            <option value="macho" ${petData.sex==='macho'?'selected':''}>♂ Macho</option>
+            <option value="hembra" ${petData.sex==='hembra'?'selected':''}>♀ Hembra</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Raza</label><input type="text" id="pet-breed" value="${petData.breed||''}" placeholder="Golden Retriever"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Fecha de nacimiento</label><input type="date" id="pet-birth" value="${petData.birth_date ? petData.birth_date.split('T')[0] : ''}"></div>
+        <div class="form-group"><label>Peso (kg)</label><input type="number" id="pet-weight" value="${petData.weight||''}" placeholder="28"></div>
+      </div>
+    </div>
+    <div class="pet-form-card">
+      <h3>Veterinario</h3>
+      <div class="form-group"><label>Nombre del veterinario</label><input type="text" id="pet-vet" value="${petData.vet_name||''}" placeholder="Dr. Claudio"></div>
+      <div class="form-group"><label>Teléfono veterinario</label><input type="text" id="pet-vet-phone" value="${petData.vet_phone||''}" placeholder="+54 9 11 1234-5678"></div>
+    </div>
+    <div class="pet-form-card">
+      <h3>Personalidad de los mensajes</h3>
+      <div class="form-group">
+        <label>Tono</label>
+        <select id="pet-tone">
+          <option value="cariñoso" ${petData.personality_tone==='cariñoso'?'selected':''}>❤️ Cariñoso</option>
+          <option value="juguetón" ${petData.personality_tone==='juguetón'?'selected':''}>🎾 Juguetón</option>
+          <option value="serio" ${petData.personality_tone==='serio'?'selected':''}>😐 Serio</option>
+          <option value="dramático" ${petData.personality_tone==='dramático'?'selected':''}>😱 Dramático</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" style="max-width:100%;margin-bottom:80px" onclick="savePet()">
+      ${currentPet ? 'Actualizar mascota' : 'Registrar mascota'}
+    </button>
+  `;
+}
+
+async function savePet() {
+  const data = {
+    name: document.getElementById('pet-name').value.trim(),
+    species: document.getElementById('pet-species').value,
+    sex: document.getElementById('pet-sex').value,
+    breed: document.getElementById('pet-breed').value.trim(),
+    birth_date: document.getElementById('pet-birth').value || null,
+    weight: parseFloat(document.getElementById('pet-weight').value) || null,
+    vet_name: document.getElementById('pet-vet').value.trim(),
+    vet_phone: document.getElementById('pet-vet-phone').value.trim(),
+    personality_tone: document.getElementById('pet-tone').value,
+  };
+  if (!data.name) { showToast('El nombre es requerido'); return; }
+
+  try {
+    let r, result;
+    if (currentPet) {
+      r = await fetch(`${API}/api/pets/${currentPet.id}`, { method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(data) });
+    } else {
+      r = await fetch(`${API}/api/pets`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(data) });
+    }
+    result = await r.json();
+    if (!r.ok) { showToast(result.error || 'Error'); return; }
+    currentPet = result;
+    localStorage.setItem('pt_pet', JSON.stringify(currentPet));
+    showToast('✅ ' + (currentPet ? 'Mascota actualizada' : 'Mascota registrada'));
+    switchTab('dashboard', document.querySelectorAll('.nav-item')[0]);
+  } catch(e) { showToast('Error de conexión'); }
+}
+
+async function renderAgenda(c) {
+  let events = [];
+  if (currentPet) {
+    try {
+      const r = await fetch(`${API}/api/agenda/${currentPet.id}`, { headers:{'Authorization':'Bearer '+token} });
+      if (r.ok) events = await r.json();
+    } catch(e) {}
+  }
+
+  const typeConfig = {
+    vaccine: { icon:'💉', label:'Vacuna', cls:'vaccine' },
+    antiparasitic: { icon:'🐛', label:'Antiparasitario', cls:'antiparasitic' },
+    pipette: { icon:'🧴', label:'Pipeta', cls:'pipette' },
+    birthday: { icon:'🎂', label:'Cumpleaños', cls:'birthday' },
+    vet_visit: { icon:'🩺', label:'Consulta', cls:'vet' },
+    heat_cycle: { icon:'❤️', label:'Ciclo de celo', cls:'vaccine' },
+  };
+
+  const eventsHtml = events.length === 0
+    ? `<div class="empty-state"><div class="es-icon">📅</div><h3>Sin eventos</h3><p>Agregá vacunas, pipetas y más con el botón +</p></div>`
+    : events.map(e => {
+        const cfg = typeConfig[e.event_type] || { icon:'📌', label:'Evento', cls:'vet' };
+        const date = new Date(e.event_date);
+        const dateStr = date.toLocaleDateString('es-AR', { day:'numeric', month:'short' });
+        return `<div class="agenda-card">
+          <div class="agenda-icon ${cfg.cls}">${cfg.icon}</div>
+          <div class="agenda-info">
+            <div class="agenda-title">${e.title}</div>
+            <div class="agenda-sub">${cfg.label}</div>
+          </div>
+          <div class="agenda-date">${dateStr}</div>
+        </div>`;
+      }).join('');
+
+  c.innerHTML = `
+    <div style="font-size:20px;font-weight:800;margin-bottom:16px">📅 Agenda de ${currentPet ? currentPet.name : 'tu mascota'}</div>
+    ${!currentPet ? `<div class="alert-item alert-orange">⚠️ Primero registrá tu mascota</div>` : ''}
+    ${eventsHtml}
+    <div style="height:80px"></div>
+  `;
+
+  if (currentPet) {
+    document.body.innerHTML += '';
+    const fab = document.createElement('button');
+    fab.className = 'fab';
+    fab.innerHTML = '+';
+    fab.onclick = () => openModal('modal-agenda');
+    // Remover fab anterior si existe
+    const oldFab = document.querySelector('.fab');
+    if (oldFab) oldFab.remove();
+    document.body.appendChild(fab);
+  }
+}
+
+async function saveAgendaEvent() {
+  if (!currentPet) { showToast('Primero registrá tu mascota'); return; }
+  const data = {
+    pet_id: currentPet.id,
+    event_type: document.getElementById('event-type').value,
+    title: document.getElementById('event-title').value.trim(),
+    event_date: document.getElementById('event-date').value,
+  };
+  if (!data.title || !data.event_date) { showToast('Completá todos los campos'); return; }
+  try {
+    const r = await fetch(`${API}/api/agenda`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify(data) });
+    if (!r.ok) { showToast('Error al guardar'); return; }
+    closeModal('modal-agenda');
+    showToast('✅ Evento guardado');
+    renderAgenda(document.getElementById('tab-content'));
+  } catch(e) { showToast('Error de conexión'); }
+}
+
+function renderMensajes(c) {
+  const triggers = [
+    { type:'no_walk', icon:'🦮', label:'Sin paseo hoy' },
+    { type:'no_food', icon:'🍖', label:'No comió' },
+    { type:'no_water', icon:'💧', label:'No tomó agua' },
+    { type:'insufficient_sleep', icon:'😴', label:'Durmió poco' },
+    { type:'vaccine_reminder', icon:'💉', label:'Recordar vacuna' },
+    { type:'pipette_reminder', icon:'🧴', label:'Recordar pipeta' },
+    { type:'birthday', icon:'🎂', label:'Cumpleaños' },
+    { type:'heat_cycle', icon:'❤️', label:'Ciclo de celo' },
+  ];
+
+  c.innerHTML = `
+    <div style="font-size:20px;font-weight:800;margin-bottom:8px">💬 Enviar mensaje</div>
+    <div style="font-size:13px;color:var(--gray-text);margin-bottom:20px">Seleccioná un evento para que ${currentPet ? currentPet.name : 'tu mascota'} te escriba por WhatsApp</div>
+    ${!currentPet ? `<div class="alert-item alert-orange">⚠️ Primero registrá tu mascota</div>` : ''}
+    <div class="trigger-grid">
+      ${triggers.map(t => `
+        <button class="trigger-btn" onclick="sendTrigger('${t.type}')">
+          <span class="tb-icon">${t.icon}</span>${t.label}
+        </button>`).join('')}
+    </div>
+    <div style="height:80px"></div>
+  `;
+}
+
+async function sendTrigger(triggerType) {
+  if (!currentPet) { showToast('Primero registrá tu mascota'); return; }
+  showToast('🤖 Generando mensaje...');
+  try {
+    const r = await fetch(`${API}/api/messages/trigger`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({ pet_id: currentPet.id, trigger_type: triggerType })
+    });
+    const data = await r.json();
+    if (!r.ok) { showToast('❌ ' + (data.error || 'Error')); return; }
+    showToast('✅ Mensaje enviado a WhatsApp 🐾');
+  } catch(e) { showToast('Error de conexión'); }
+}
+
+// ════════════════════════════════════════
+// TABS - VETERINARIA
+// ════════════════════════════════════════
+function renderVetTab(tab) {
+  const c = document.getElementById('vet-content');
+  if (tab === 'resumen') renderVetResumen(c);
+  else if (tab === 'pacientes') renderVetPacientes(c);
+  else if (tab === 'turnos') renderVetTurnos(c);
+  else if (tab === 'ofertas') renderVetOfertas(c);
+}
+
+function renderVetResumen(c) {
+  const vetName = userName.split(' ')[0];
+  c.innerHTML = `
+    <div style="font-size:20px;font-weight:800;margin-bottom:16px">📊 Panel — ${vetName}</div>
+    <div class="vet-stats">
+      <div class="vet-stat"><div class="vet-stat-num">156</div><div class="vet-stat-label">Pacientes</div></div>
+      <div class="vet-stat"><div class="vet-stat-num">12</div><div class="vet-stat-label">Hoy</div></div>
+      <div class="vet-stat"><div class="vet-stat-num">8</div><div class="vet-stat-label">Alertas</div></div>
+    </div>
+    <div class="section-title">📋 Paciente destacado</div>
+    <div class="patient-card">
+      <div class="patient-header">
+        <div class="patient-avatar">🐕</div>
+        <div>
+          <div class="patient-name">Lila</div>
+          <div class="patient-breed">Golden · 5 años</div>
+        </div>
+        <span class="badge badge-warn">⚠️ Vacuna vence</span>
+      </div>
+      <div class="patient-details">
+        <div class="detail-item"><span class="detail-key">Última consulta</span><span class="detail-val">15/01/2026</span></div>
+        <div class="detail-item"><span class="detail-key">Peso</span><span class="detail-val">28 kg</span></div>
+        <div class="detail-item"><span class="detail-key">Antiparasitario</span><span class="detail-val" style="color:var(--green)">✅ Al día</span></div>
+        <div class="detail-item"><span class="detail-key">Dueño</span><span class="detail-val">Ariel G.</span></div>
+      </div>
+    </div>
+    <div class="offer-banner" style="margin-top:16px">
+      <h3>📢 Publicar oferta</h3>
+      <p>Creá una promo que llega como mensaje de la mascota a sus dueños</p>
+      <button class="btn-white" onclick="openModal('modal-oferta')">+ Nueva oferta</button>
+    </div>
+    <div style="height:80px"></div>
+  `;
+}
+
+function renderVetPacientes(c) {
+  c.innerHTML = `
+    <div style="font-size:20px;font-weight:800;margin-bottom:16px">🐾 Pacientes</div>
+    ${[
+      {name:'Lila', breed:'Golden · 5 años', icon:'🐕', warn:true},
+      {name:'Mishi', breed:'Gato persa · 3 años', icon:'🐈', warn:false},
+      {name:'Rocky', breed:'Labrador · 2 años', icon:'🐕', warn:false},
+    ].map(p => `
+      <div class="patient-card">
+        <div class="patient-header">
+          <div class="patient-avatar">${p.icon}</div>
+          <div><div class="patient-name">${p.name}</div><div class="patient-breed">${p.breed}</div></div>
+          <span class="badge ${p.warn ? 'badge-warn' : 'badge-ok'}">${p.warn ? '⚠️ Alerta' : '✅ OK'}</span>
+        </div>
+      </div>`).join('')}
+    <div style="height:80px"></div>
+  `;
+}
+
+function renderVetTurnos(c) {
+  c.innerHTML = `
+    <div style="font-size:20px;font-weight:800;margin-bottom:16px">📅 Turnos de hoy</div>
+    <div style="background:white;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)">
+      ${[
+        {time:'10:00', pet:'🐕 Lila', type:'Control + vacuna'},
+        {time:'11:30', pet:'🐈 Mishi', type:'Castración'},
+        {time:'14:00', pet:'🐕 Rocky', type:'Consulta general'},
+        {time:'16:30', pet:'🐇 Coco', type:'Control de peso'},
+      ].map(t => `
+        <div class="turno-item">
+          <div class="turno-time">${t.time}</div>
+          <div><div class="turno-pet">${t.pet}</div><div class="turno-type">${t.type}</div></div>
+        </div>`).join('')}
+    </div>
+    <div style="height:80px"></div>
+  `;
+}
+
+function renderVetOfertas(c) {
+  c.innerHTML = `
+    <div style="font-size:20px;font-weight:800;margin-bottom:16px">🏷️ Mis ofertas</div>
+    <div class="offer-banner">
+      <h3>📢 Nueva oferta</h3>
+      <p>Los dueños la reciben como mensaje de su mascota</p>
+      <button class="btn-white" onclick="openModal('modal-oferta')">+ Publicar</button>
+    </div>
+    <div style="background:white;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-top:16px">
+      <div style="font-size:14px;color:var(--gray-text);text-align:center;padding:20px">No hay ofertas activas todavía</div>
+    </div>
+    <div style="height:80px"></div>
+  `;
+}
+
+function publishOffer() {
+  const titulo = document.getElementById('oferta-titulo').value.trim();
+  const descuento = document.getElementById('oferta-descuento').value;
+  const desc = document.getElementById('oferta-desc').value.trim();
+  if (!titulo) { showToast('Completá el título'); return; }
+  closeModal('modal-oferta');
+  showToast('✅ Oferta publicada — los dueños recibirán el mensaje 🐾');
+}
+
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ════════════════════════════════════════
+// INIT — auto-login si hay token guardado
+// ════════════════════════════════════════
+window.onload = () => {
+  if (token && userRole) {
+    // Intentar cargar mascota guardada
+    showApp();
+  }
+};
+</script>
+</body>
+</html>
