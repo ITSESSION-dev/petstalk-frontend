@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import { Switch, Spinner } from '../components/Ui.jsx';
+import { Switch, Spinner, Chip, CardHead } from '../components/Ui.jsx';
 import { PREFS } from '../constants.js';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -17,8 +17,7 @@ export default function Preferences({ pet, notify }) {
     setPrefs(next);
     setSaving(true);
     try {
-      const saved = await api.savePreferences(pet.id, next);
-      setPrefs(saved);
+      setPrefs(await api.savePreferences(pet.id, next));
     } catch (e) {
       notify(e.message);
     } finally {
@@ -27,38 +26,42 @@ export default function Preferences({ pet, notify }) {
   }
 
   if (!prefs) return <Spinner />;
+  const on = PREFS.filter((p) => prefs[p.key] !== false).length;
 
   return (
     <>
-      <h2 style={{ fontSize: 24, margin: '8px 0 4px' }}>¿De qué te avisa {pet.name}?</h2>
-      <p className="muted" style={{ marginTop: 0 }}>Elegí qué mensajes querés recibir por WhatsApp. {saving ? 'Guardando…' : ''}</p>
+      <h1 className="page-title">Avisos</h1>
+      <p className="page-sub">{saving ? 'Guardando…' : `${pet.name} te avisa de ${on} de ${PREFS.length} cosas por WhatsApp.`}</p>
 
       <div className="card">
-        {PREFS.map((p) => (
-          <div className="toggle-row" key={p.key}>
-            <div className="lbl"><span>{p.emoji}</span>{p.label}</div>
-            <Switch checked={prefs[p.key] !== false} onChange={(v) => save({ ...prefs, [p.key]: v })} />
-          </div>
-        ))}
+        <CardHead title="Horarios" />
+        <p className="muted" style={{ margin: '-6px 0 10px' }}>Si a esa hora todavía no pasó, {pet.name} te escribe.</p>
+        <HourRow icon="walk" tint="teal" label="Paseo" value={prefs.walk_reminder_hour ?? 18}
+          onChange={(h) => save({ ...prefs, walk_reminder_hour: h })} />
+        <HourRow icon="bowl" tint="peach" label="Comida" value={prefs.food_reminder_hour ?? 20}
+          onChange={(h) => save({ ...prefs, food_reminder_hour: h })} />
       </div>
 
       <div className="card">
-        <h3>Horarios</h3>
-        <p className="muted" style={{ marginTop: -6 }}>Si a esa hora todavía no pasó, {pet.name} te escribe.</p>
-        <HourRow label="🦮 Recordatorio de paseo" value={prefs.walk_reminder_hour ?? 18}
-          onChange={(h) => save({ ...prefs, walk_reminder_hour: h })} />
-        <HourRow label="🍖 Recordatorio de comida" value={prefs.food_reminder_hour ?? 20}
-          onChange={(h) => save({ ...prefs, food_reminder_hour: h })} />
+        <CardHead title="¿De qué querés que te hable?" />
+        {PREFS.map((p) => (
+          <div className="toggle-row" key={p.key}>
+            <Chip icon={p.icon} tint={p.tint} size={17} />
+            <div className="lbl">{p.label}</div>
+            <Switch checked={prefs[p.key] !== false} onChange={(v) => save({ ...prefs, [p.key]: v })} />
+          </div>
+        ))}
       </div>
     </>
   );
 }
 
-function HourRow({ label, value, onChange }) {
+function HourRow({ icon, tint, label, value, onChange }) {
   return (
     <div className="toggle-row">
+      <Chip icon={icon} tint={tint} size={17} />
       <div className="lbl">{label}</div>
-      <select className="input" style={{ width: 110 }} value={value} onChange={(e) => onChange(Number(e.target.value))}>
+      <select className="input" style={{ width: 104, padding: '9px 12px' }} value={value} onChange={(e) => onChange(Number(e.target.value))}>
         {HOURS.map((h) => <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>)}
       </select>
     </div>

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { api } from '../api.js';
-import { Field } from '../components/Ui.jsx';
+import { Field, Brand } from '../components/Ui.jsx';
+import Icon from '../components/Icon.jsx';
 
 const ROLES = [
-  { value: 'owner', label: 'Dueño', emoji: '🏠' },
-  { value: 'vet', label: 'Veterinaria', emoji: '🩺' },
-  { value: 'shop', label: 'Pet shop', emoji: '🛍️' }
+  { value: 'owner', label: 'Dueño', icon: 'home' },
+  { value: 'vet', label: 'Veterinaria', icon: 'steth' },
+  { value: 'shop', label: 'Pet shop', icon: 'tag' }
 ];
 
 // Normaliza el celular argentino al formato que usa WhatsApp: 549 + área + número
@@ -20,7 +21,6 @@ export function normalizePhone(raw) {
   }
   if (p.startsWith('9')) p = p.slice(1);
   if (p.startsWith('0')) p = p.slice(1);
-  // quitar el "15" después del código de área (2, 3 o 4 dígitos)
   for (const len of [2, 3, 4]) {
     if (p.length === 12 && p.slice(len, len + 2) === '15') { p = p.slice(0, len) + p.slice(len + 2); break; }
   }
@@ -28,7 +28,7 @@ export function normalizePhone(raw) {
 }
 
 export default function Auth({ onLogin }) {
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState('welcome'); // welcome | login | register
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', role: 'owner' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,18 +58,42 @@ export default function Auth({ onLogin }) {
     }
   }
 
+  if (mode === 'welcome') {
+    return (
+      <section className="welcome">
+        <div className="row between"><Brand /><button className="skip" onClick={() => setMode('login')}>Ingresar</button></div>
+        <h1>Tu mascota<br />te <em>habla</em> por<br />WhatsApp</h1>
+        <p className="lead">Recordatorios de vacunas, paseos y comidas, contados por ella misma.</p>
+
+        <div className="hero-art">
+          <div className="halo" />
+          <div className="pet">🐶</div>
+          <div className="wa-bubble"><div className="who"><Icon name="paw" size={12} />Lila</div>¡Ariel! Hoy todavía no salimos a pasear… ¿un ratito? 🦴</div>
+          <div className="wa-bubble b2">¡Ya vamos! 🦮</div>
+        </div>
+
+        <button className="btn" onClick={() => setMode('register')}>Empezar <span className="go"><Icon name="arrow" size={16} /></span></button>
+        <div className="card social" style={{ marginTop: 14, marginBottom: 0 }}>
+          <div><b>Para dueños, veterinarias</b><span className="muted">y pet shops</span></div>
+          <div className="dots"><span>🐶</span><span>🐱</span><span>🩺</span></div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <>
-      <div className="hero">
-        <div className="paw">🐶</div>
-        <h1>Pet's Talk</h1>
-        <p>Tu mascota te habla por WhatsApp</p>
-      </div>
+      <header className="topbar">
+        <button className="icon-btn" onClick={() => { setMode('welcome'); setError(''); }} aria-label="Volver"><Icon name="left" size={19} /></button>
+        <Brand />
+        <span style={{ width: 42 }} />
+      </header>
 
-      <form className="auth" onSubmit={submit}>
+      <form className="sheet" onSubmit={submit}>
+        <h1 className="page-title" style={{ fontSize: 28, marginTop: 14 }}>{mode === 'login' ? '¡Hola de nuevo! 👋' : 'Creá tu cuenta'}</h1>
+        <p className="page-sub">{mode === 'login' ? 'Tu mascota te estaba esperando.' : 'En un minuto tu mascota te empieza a escribir.'}</p>
+
         <div className="card">
-          <h3>{mode === 'login' ? '¡Hola de nuevo! 👋' : 'Creá tu cuenta'}</h3>
-
           {error && <div className="error">{error}</div>}
 
           {mode === 'register' && (
@@ -79,7 +103,7 @@ export default function Auth({ onLogin }) {
                   {ROLES.map((r) => (
                     <button type="button" key={r.value} className={`role ${form.role === r.value ? 'on' : ''}`}
                       onClick={() => setForm({ ...form, role: r.value })}>
-                      <span>{r.emoji}</span>{r.label}
+                      <Icon name={r.icon} size={22} />{r.label}
                     </button>
                   ))}
                 </div>
@@ -103,10 +127,11 @@ export default function Auth({ onLogin }) {
 
           <button className="btn" disabled={loading}>
             {loading ? 'Un segundo…' : mode === 'login' ? 'Ingresar' : 'Crear cuenta'}
+            {!loading && <span className="go"><Icon name="arrow" size={16} /></span>}
           </button>
         </div>
 
-        <p className="muted" style={{ textAlign: 'center' }}>
+        <p className="muted center">
           {mode === 'login' ? '¿No tenés cuenta? ' : '¿Ya tenés cuenta? '}
           <button type="button" className="link" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>
             {mode === 'login' ? 'Registrate' : 'Ingresá'}

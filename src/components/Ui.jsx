@@ -1,7 +1,8 @@
+import Icon from './Icon.jsx';
 import { speciesEmoji } from '../constants.js';
 
 export function Brand() {
-  return <div className="brand">🐾 <span><b>Pet's</b> <i>Talk</i></span></div>;
+  return <div className="brand"><span className="logo"><Icon name="paw" size={18} /></span>Pet's Talk</div>;
 }
 
 export function TopBar({ left, right }) {
@@ -11,6 +12,14 @@ export function TopBar({ left, right }) {
       {right}
     </header>
   );
+}
+
+export function IconBtn({ icon, onClick, title }) {
+  return <button className="icon-btn" onClick={onClick} title={title} aria-label={title}><Icon name={icon} size={19} /></button>;
+}
+
+export function Chip({ icon, tint = 'teal', size = 18 }) {
+  return <span className={`chip-ic t-${tint}`}><Icon name={icon} size={size} /></span>;
 }
 
 export function Avatar({ pet, size = '' }) {
@@ -40,4 +49,13 @@ export function Switch({ checked, onChange }) {
 
 export function Spinner() {
   return <div className="spinner" aria-label="Cargando" />;
+}
+
+export function CardHead({ title, action, onAction }) {
+  return (
+    <div className="card-h">
+      <h3>{title}</h3>
+      {action && <button className="more" onClick={onAction}>{action}<Icon name="right" size={15} /></button>}
+    </div>
+  );
 }

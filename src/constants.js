@@ -12,12 +12,12 @@ export const TONES = [
 ];
 
 export const EVENT_TYPES = [
-  { value: 'vaccine', label: 'Vacuna', emoji: '💉' },
-  { value: 'pipette', label: 'Pipeta', emoji: '🧴' },
-  { value: 'antiparasitic', label: 'Antiparasitario', emoji: '💊' },
-  { value: 'vet_visit', label: 'Consulta veterinaria', emoji: '🩺' },
-  { value: 'birthday', label: 'Cumpleaños', emoji: '🎂' },
-  { value: 'heat_cycle', label: 'Celo', emoji: '🌸' }
+  { value: 'vaccine', label: 'Vacuna', emoji: '💉', icon: 'syringe', tint: 'teal' },
+  { value: 'pipette', label: 'Pipeta', emoji: '🧴', icon: 'shield', tint: 'peach' },
+  { value: 'antiparasitic', label: 'Antiparasitario', emoji: '💊', icon: 'pill', tint: 'lilac' },
+  { value: 'vet_visit', label: 'Consulta veterinaria', emoji: '🩺', icon: 'steth', tint: 'sky' },
+  { value: 'birthday', label: 'Cumpleaños', emoji: '🎂', icon: 'cake', tint: 'rose' },
+  { value: 'heat_cycle', label: 'Celo', emoji: '🌸', icon: 'flower', tint: 'rose' }
 ];
 
 export const RECURRENCES = [
@@ -29,12 +29,12 @@ export const RECURRENCES = [
 
 // Eventos que se pueden simular (lo que en el futuro detectará el collar)
 export const SIMULATIONS = [
-  { type: 'no_walk', label: 'No salió a pasear', emoji: '🦮' },
-  { type: 'no_food', label: 'No comió', emoji: '🍖' },
-  { type: 'no_water', label: 'No tomó agua', emoji: '💧' },
-  { type: 'insufficient_sleep', label: 'Durmió poco', emoji: '😴' },
-  { type: 'birthday', label: 'Cumpleaños', emoji: '🎂' },
-  { type: 'commercial_offer', label: 'Oferta de la vete', emoji: '🏷️', context: 'La veterinaria del barrio tiene 20% OFF en alimento balanceado y lo lleva a domicilio' }
+  { type: 'no_walk', label: 'No salió a pasear', emoji: '🦮', icon: 'walk', tint: 'teal' },
+  { type: 'no_food', label: 'No comió', emoji: '🍖', icon: 'bowl', tint: 'peach' },
+  { type: 'no_water', label: 'No tomó agua', emoji: '💧', icon: 'drop', tint: 'sky' },
+  { type: 'insufficient_sleep', label: 'Durmió poco', emoji: '😴', icon: 'moon', tint: 'lilac' },
+  { type: 'birthday', label: 'Cumpleaños', emoji: '🎂', icon: 'cake', tint: 'rose' },
+  { type: 'commercial_offer', label: 'Oferta de la vete', emoji: '🏷️', icon: 'tag', tint: 'peach', context: 'La veterinaria del barrio tiene 20% OFF en alimento balanceado y lo lleva a domicilio' }
 ];
 
 export const EVENT_LABELS = {
@@ -45,16 +45,16 @@ export const EVENT_LABELS = {
 };
 
 export const PREFS = [
-  { key: 'notify_walk', label: 'Paseos', emoji: '🦮' },
-  { key: 'notify_food', label: 'Comida', emoji: '🍖' },
-  { key: 'notify_water', label: 'Agua', emoji: '💧' },
-  { key: 'notify_sleep', label: 'Descanso', emoji: '😴' },
-  { key: 'notify_vaccine', label: 'Vacunas y consultas', emoji: '💉' },
-  { key: 'notify_pipette', label: 'Pipetas', emoji: '🧴' },
-  { key: 'notify_antiparasitic', label: 'Antiparasitarios', emoji: '💊' },
-  { key: 'notify_birthday', label: 'Cumpleaños', emoji: '🎂' },
-  { key: 'notify_heat_cycle', label: 'Celo', emoji: '🌸' },
-  { key: 'notify_offers', label: 'Ofertas de veterinarias y pet shops', emoji: '🏷️' }
+  { key: 'notify_walk', label: 'Paseos', emoji: '🦮', icon: 'walk', tint: 'teal' },
+  { key: 'notify_food', label: 'Comida', emoji: '🍖', icon: 'bowl', tint: 'peach' },
+  { key: 'notify_water', label: 'Agua', emoji: '💧', icon: 'drop', tint: 'sky' },
+  { key: 'notify_sleep', label: 'Descanso', emoji: '😴', icon: 'moon', tint: 'lilac' },
+  { key: 'notify_vaccine', label: 'Vacunas y consultas', emoji: '💉', icon: 'syringe', tint: 'teal' },
+  { key: 'notify_pipette', label: 'Pipetas', emoji: '🧴', icon: 'shield', tint: 'peach' },
+  { key: 'notify_antiparasitic', label: 'Antiparasitarios', emoji: '💊', icon: 'pill', tint: 'lilac' },
+  { key: 'notify_birthday', label: 'Cumpleaños', emoji: '🎂', icon: 'cake', tint: 'rose' },
+  { key: 'notify_heat_cycle', label: 'Celo', emoji: '🌸', icon: 'flower', tint: 'rose' },
+  { key: 'notify_offers', label: 'Ofertas de veterinarias y pet shops', emoji: '🏷️', icon: 'tag', tint: 'peach' }
 ];
 
 export function speciesEmoji(species) {
@@ -62,7 +62,7 @@ export function speciesEmoji(species) {
 }
 
 export function eventMeta(type) {
-  return EVENT_TYPES.find((e) => e.value === type) || { label: type, emoji: '📅' };
+  return EVENT_TYPES.find((e) => e.value === type) || { label: type, emoji: '📅', icon: 'calendar', tint: 'teal' };
 }
 
 export function daysUntil(dateStr) {

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { api } from '../api.js';
-import { Field, Spinner } from '../components/Ui.jsx';
+import { Field, Spinner, Chip } from '../components/Ui.jsx';
+import Icon from '../components/Icon.jsx';
 import { EVENT_TYPES, eventMeta, daysUntil, formatDate } from '../constants.js';
 
 export default function Agenda({ pet, events, onChange, notify }) {
   const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({ event_type: 'vaccine', title: '', event_date: '', description: '' });
+  const [view, setView] = useState('next');
+  const [form, setForm] = useState({ event_type: 'vaccine', title: '', event_date: '' });
   const [saving, setSaving] = useState(false);
 
   async function save(e) {
@@ -17,11 +19,10 @@ export default function Agenda({ pet, events, onChange, notify }) {
         pet_id: pet.id,
         event_type: form.event_type,
         title: form.title.trim() || meta.label,
-        description: form.description.trim() || null,
         event_date: form.event_date
       });
-      notify(`📅 Agendado. ${pet.name} te avisa 30, 15, 7 y 1 día antes`);
-      setForm({ event_type: 'vaccine', title: '', event_date: '', description: '' });
+      notify(`Agendado. ${pet.name} te avisa 30, 15, 7 y 1 día antes`);
+      setForm({ event_type: 'vaccine', title: '', event_date: '' });
       setAdding(false);
       onChange();
     } catch (err) {
@@ -37,21 +38,27 @@ export default function Agenda({ pet, events, onChange, notify }) {
   }
 
   const future = (events || []).filter((e) => daysUntil(e.event_date) >= 0);
-  const past = (events || []).filter((e) => daysUntil(e.event_date) < 0);
+  const past = (events || []).filter((e) => daysUntil(e.event_date) < 0).reverse();
+  const list = view === 'next' ? future : past;
 
   return (
     <>
-      <h2 style={{ fontSize: 24, margin: '8px 0 4px' }}>Agenda de {pet.name}</h2>
-      <p className="muted" style={{ marginTop: 0 }}>Vacunas, pipetas y controles. {pet.name} te los recuerda por WhatsApp.</p>
+      <div className="row between">
+        <div>
+          <h1 className="page-title">Agenda</h1>
+          <p className="page-sub">Vacunas, pipetas y controles de {pet.name}.</p>
+        </div>
+        {!adding && <button className="icon-btn" style={{ background: 'var(--teal)', color: '#fff' }} onClick={() => setAdding(true)} aria-label="Agregar"><Icon name="plus" size={20} /></button>}
+      </div>
 
-      {adding ? (
+      {adding && (
         <form className="card" onSubmit={save}>
-          <h3>Nuevo cuidado</h3>
+          <div className="card-h"><h3>Nuevo cuidado</h3><button type="button" className="more" onClick={() => setAdding(false)}><Icon name="x" size={18} /></button></div>
           <Field label="¿Qué es?">
-            <div className="chips">
+            <div className="pills">
               {EVENT_TYPES.map((t) => (
-                <button type="button" key={t.value} className={`chip ${form.event_type === t.value ? 'on' : ''}`}
-                  onClick={() => setForm({ ...form, event_type: t.value })}>{t.emoji} {t.label}</button>
+                <button type="button" key={t.value} className={`pill ${form.event_type === t.value ? 'on' : ''}`}
+                  onClick={() => setForm({ ...form, event_type: t.value })}><Icon name={t.icon} size={14} />{t.label}</button>
               ))}
             </div>
           </Field>
@@ -62,38 +69,29 @@ export default function Agenda({ pet, events, onChange, notify }) {
             <input className="input" type="date" required value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
           </Field>
           <button className="btn" disabled={saving}>{saving ? 'Guardando…' : 'Agendar'}</button>
-          <button type="button" className="btn ghost" style={{ marginTop: 10 }} onClick={() => setAdding(false)}>Cancelar</button>
         </form>
-      ) : (
-        <button className="btn orange" style={{ marginBottom: 16 }} onClick={() => setAdding(true)}>+ Agregar cuidado</button>
       )}
 
-      <div className="card">
-        <h3>Próximos</h3>
-        {!events ? <Spinner /> : future.length === 0 ? <p className="muted">Nada pendiente 🎉</p> : future.map((e) => (
-          <EventRow key={e.id} ev={e} onDelete={() => remove(e)} />
-        ))}
+      <div className="seg">
+        <button className={view === 'next' ? 'on' : ''} onClick={() => setView('next')}>Próximos ({future.length})</button>
+        <button className={view === 'past' ? 'on' : ''} onClick={() => setView('past')}>Historial ({past.length})</button>
       </div>
 
-      {past.length > 0 && (
-        <div className="card">
-          <h3>Historial</h3>
-          {past.map((e) => <EventRow key={e.id} ev={e} onDelete={() => remove(e)} past />)}
-        </div>
-      )}
+      <div className="card">
+        {!events ? <Spinner /> : list.length === 0 ? (
+          <p className="muted center" style={{ margin: '8px 0' }}>{view === 'next' ? 'Nada pendiente 🎉 Tocá + para agregar un cuidado.' : 'Todavía no hay historial.'}</p>
+        ) : list.map((e) => {
+          const m = eventMeta(e.event_type); const d = daysUntil(e.event_date);
+          return (
+            <div className="item" key={e.id}>
+              <Chip icon={m.icon} tint={m.tint} />
+              <div style={{ minWidth: 0 }}><div className="t">{e.title}</div><div className="s">{m.label} · {formatDate(e.event_date)}</div></div>
+              <div className={`when ${view === 'past' ? 'past' : d <= 7 ? 'soon' : ''}`}>{view === 'past' ? 'hecho' : d === 0 ? '¡Hoy!' : `en ${d} días`}</div>
+              <button className="del" onClick={() => remove(e)} aria-label="Borrar"><Icon name="x" size={16} /></button>
+            </div>
+          );
+        })}
+      </div>
     </>
-  );
-}
-
-function EventRow({ ev, onDelete, past }) {
-  const m = eventMeta(ev.event_type);
-  const d = daysUntil(ev.event_date);
-  return (
-    <div className="event" style={past ? { opacity: 0.6 } : null}>
-      <div className="ico">{m.emoji}</div>
-      <div><b>{ev.title}</b><div className="muted">{m.label} · {formatDate(ev.event_date)}</div></div>
-      <div className={`when ${!past && d <= 7 ? 'soon' : ''}`}>{past ? 'hecho' : d === 0 ? '¡Hoy!' : `en ${d} días`}</div>
-      <button className="del" onClick={onDelete} title="Borrar">✕</button>
-    </div>
   );
 }
